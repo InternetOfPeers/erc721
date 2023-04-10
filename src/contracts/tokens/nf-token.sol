@@ -171,11 +171,23 @@ contract NFToken is
   )
     external
     override
-    canTransfer(_tokenId)
-    validNFToken(_tokenId)
   {
-    address tokenOwner = idToOwner[_tokenId];
-    require(tokenOwner == _from, NOT_OWNER);
+    if(msg.sender != _from) {
+      if(msg.sender != idToApproval[_tokenId]) {
+        address tokenOwner = idToOwner[_tokenId];
+        require(ownerToOperators[tokenOwner][msg.sender], NOT_OWNER_APPROVED_OR_OPERATOR);
+      }
+    }
+    else {
+      address tokenOwner = idToOwner[_tokenId];
+      require(
+        tokenOwner == msg.sender
+        || ownerToOperators[tokenOwner][msg.sender],
+        NOT_OWNER_APPROVED_OR_OPERATOR
+      );
+      require(tokenOwner == _from, NOT_OWNER);
+      require(tokenOwner != address(0), NOT_VALID_NFT);
+    }
     require(_to != address(0), ZERO_ADDRESS);
 
     _transfer(_to, _tokenId);
